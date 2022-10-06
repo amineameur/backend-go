@@ -31,6 +31,7 @@ func main() {
 
 	router.HandleFunc("/cars", getCars).Methods("GET")
 	router.HandleFunc("/cars", insertCar).Methods("POST")
+	router.HandleFunc("/cars/{registration}/rentals", rentACar).Methods("POST")
 
 	http.Handle("/", router)
 	http.ListenAndServe(":8080", router)
@@ -47,7 +48,7 @@ func getCars(w http.ResponseWriter, r *http.Request) {
 }
 
 func insertCar(w http.ResponseWriter, r *http.Request) {
-
+	// getting the body and transforming it to car structure
 	var currentBody car
 	body, _ := ioutil.ReadAll(r.Body)
 	json.Unmarshal(body, &currentBody)
@@ -58,15 +59,37 @@ func insertCar(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	// creating ID
 	id, err := strconv.Atoi(cars[len(cars)-1].ID)
 	if err != nil {
 		id = 0
 	}
 	var currentId string = strconv.Itoa(id + 1)
+
 	currentBody.ID = currentId
+
 	cars = append(cars, currentBody)
 
 	w.WriteHeader(http.StatusCreated)
 	response, _ := json.Marshal(currentBody)
 	w.Write(response)
+}
+func rentACar(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	registration := params["registration"]
+	for i, v := range cars {
+		if registration == v.Registration && v.Rented != true {
+			cars[i].Rented = true
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("car has been put at your disposal"))
+			return
+		}
+		if registration == v.Registration && v.Rented {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("already rented"))
+			return
+		}
+	}
+	w.WriteHeader(http.StatusConflict)
+	w.Write([]byte("registration not available in our shop"))
 }
