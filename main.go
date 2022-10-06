@@ -106,9 +106,9 @@ func returnACar(w http.ResponseWriter, r *http.Request) {
 			json.Unmarshal(body, &currentBody)
 
 			cars[i].Rented = false
-			currentMeage, _ := strconv.Atoi(currentBody.Mileage)
-			addedMeage, _ := strconv.Atoi(cars[i].Mileage)
-			cars[i].Mileage = strconv.Itoa(currentMeage + addedMeage)
+			currentMileage, _ := strconv.Atoi(currentBody.Mileage)
+			addedMileage, _ := strconv.Atoi(cars[i].Mileage)
+			cars[i].Mileage = strconv.Itoa(currentMileage + addedMileage)
 
 			w.WriteHeader(http.StatusAccepted)
 			w.Write([]byte("car has been delivered back"))
