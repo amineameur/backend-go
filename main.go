@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -27,6 +28,7 @@ func main() {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/cars", getCars).Methods("GET")
+	router.HandleFunc("/cars", insertCar).Methods("POST")
 
 	http.Handle("/", router)
 	http.ListenAndServe(":8080", router)
@@ -42,10 +44,19 @@ func getCars(w http.ResponseWriter, r *http.Request) {
 	w.Write(responseJson)
 }
 
-func inserCar(w http.ResponseWriter, r *http.Request) {
+func insertCar(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(cars[len(cars)-1].ID)
 	if err != nil {
 		id = 0
 	}
-	id = id + 1
+	var currentId string = strconv.Itoa(id + 1)
+	var currentBody car
+	body, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(body, &currentBody)
+	currentBody.ID = currentId
+	cars = append(cars, currentBody)
+
+	w.WriteHeader(http.StatusCreated)
+	response, _ := json.Marshal(currentBody)
+	w.Write(response)
 }
