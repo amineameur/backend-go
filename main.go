@@ -39,13 +39,13 @@ func main() {
 }
 
 func getCars(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
 	responseJson, err := json.Marshal(cars)
 	if err != nil {
+		WriteByteResponse(w, http.StatusForbidden, "please try again")
+
 		return
 	}
-	w.Write(responseJson)
+	WriteJsonResponse(w, http.StatusOK, responseJson)
 }
 
 func insertCar(w http.ResponseWriter, r *http.Request) {
@@ -55,8 +55,7 @@ func insertCar(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(body, &currentBody)
 	for _, v := range cars {
 		if v.Registration == currentBody.Registration {
-			w.WriteHeader(http.StatusConflict)
-			w.Write([]byte("registration already existing"))
+			WriteByteResponse(w, http.StatusOK, "registration already existing")
 			return
 		}
 	}
@@ -70,10 +69,9 @@ func insertCar(w http.ResponseWriter, r *http.Request) {
 	currentBody.ID = currentId
 
 	cars = append(cars, currentBody)
-
-	w.WriteHeader(http.StatusCreated)
 	response, _ := json.Marshal(currentBody)
-	w.Write(response)
+
+	WriteJsonResponse(w, http.StatusCreated, response)
 }
 func rentACar(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
@@ -81,18 +79,17 @@ func rentACar(w http.ResponseWriter, r *http.Request) {
 	for i, v := range cars {
 		if registration == v.Registration && v.Rented != true {
 			cars[i].Rented = true
-			w.WriteHeader(http.StatusAccepted)
-			w.Write([]byte("car has been put at your disposal"))
+			WriteByteResponse(w, http.StatusAccepted, "car has been put at your disposal")
 			return
 		}
 		if registration == v.Registration && v.Rented {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("already rented"))
+			WriteByteResponse(w, http.StatusOK, "already rented")
 			return
 		}
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("registration not available in our shop"))
+
+	WriteByteResponse(w, http.StatusOK, "registration not available in our shop")
+
 }
 
 func returnACar(w http.ResponseWriter, r *http.Request) {
@@ -110,11 +107,12 @@ func returnACar(w http.ResponseWriter, r *http.Request) {
 			addedMileage, _ := strconv.Atoi(cars[i].Mileage)
 			cars[i].Mileage = strconv.Itoa(currentMileage + addedMileage)
 
-			w.WriteHeader(http.StatusAccepted)
-			w.Write([]byte("car has been delivered back"))
+			WriteByteResponse(w, http.StatusAccepted, "car has been delivered back")
+
 			return
 		}
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("registration not available in our shop"))
+
+	WriteByteResponse(w, http.StatusOK, "registration not available in our shop")
+
 }
