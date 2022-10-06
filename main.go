@@ -32,6 +32,7 @@ func main() {
 	router.HandleFunc("/cars", getCars).Methods("GET")
 	router.HandleFunc("/cars", insertCar).Methods("POST")
 	router.HandleFunc("/cars/{registration}/rentals", rentACar).Methods("POST")
+	router.HandleFunc("/cars/{registration}/returns", returnACar).Methods("POST")
 
 	http.Handle("/", router)
 	http.ListenAndServe(":8080", router)
@@ -80,7 +81,7 @@ func rentACar(w http.ResponseWriter, r *http.Request) {
 	for i, v := range cars {
 		if registration == v.Registration && v.Rented != true {
 			cars[i].Rented = true
-			w.WriteHeader(http.StatusOK)
+			w.WriteHeader(http.StatusAccepted)
 			w.Write([]byte("car has been put at your disposal"))
 			return
 		}
@@ -90,6 +91,30 @@ func rentACar(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	w.WriteHeader(http.StatusConflict)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("registration not available in our shop"))
+}
+
+func returnACar(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	registration := params["registration"]
+	for i, v := range cars {
+		if registration == v.Registration {
+
+			var currentBody car
+			body, _ := ioutil.ReadAll(r.Body)
+			json.Unmarshal(body, &currentBody)
+
+			cars[i].Rented = false
+			currentMeage, _ := strconv.Atoi(currentBody.Mileage)
+			addedMeage, _ := strconv.Atoi(cars[i].Mileage)
+			cars[i].Mileage = strconv.Itoa(currentMeage + addedMeage)
+
+			w.WriteHeader(http.StatusAccepted)
+			w.Write([]byte("car has been delivered back"))
+			return
+		}
+	}
+	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("registration not available in our shop"))
 }
