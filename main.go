@@ -10,18 +10,20 @@ import (
 )
 
 type car struct {
-	ID      string `json:"id"`
-	Model   string `json:"model"`
-	Mileage string `json:"mileage"`
-	Rented  bool   `json:"rented"`
+	ID           string `json:"id"`
+	Model        string `json:"model"`
+	Mileage      string `json:"mileage"`
+	Rented       bool   `json:"rented"`
+	Registration string `json:"registration"`
 }
 
 var cars = []car{
 	{
-		ID:      "1",
-		Model:   "mercedes",
-		Mileage: "1233",
-		Rented:  false},
+		ID:           "1",
+		Model:        "mercedes",
+		Mileage:      "1233",
+		Rented:       false,
+		Registration: "sefm13245"},
 }
 
 func main() {
@@ -45,14 +47,22 @@ func getCars(w http.ResponseWriter, r *http.Request) {
 }
 
 func insertCar(w http.ResponseWriter, r *http.Request) {
+
+	var currentBody car
+	body, _ := ioutil.ReadAll(r.Body)
+	json.Unmarshal(body, &currentBody)
+	for _, v := range cars {
+		if v.Registration == currentBody.Registration {
+			w.WriteHeader(http.StatusConflict)
+			w.Write([]byte("registration already existing"))
+			return
+		}
+	}
 	id, err := strconv.Atoi(cars[len(cars)-1].ID)
 	if err != nil {
 		id = 0
 	}
 	var currentId string = strconv.Itoa(id + 1)
-	var currentBody car
-	body, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(body, &currentBody)
 	currentBody.ID = currentId
 	cars = append(cars, currentBody)
 
