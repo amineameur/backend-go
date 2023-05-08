@@ -1,3 +1,6 @@
+###RUN  go build to compile the code
+###RUN ./backend-go to run the compiled file and start the server
+
 # Objective #
 
 The objective of this test is to create an API in GO language to manage parking lot of a rental agency.
